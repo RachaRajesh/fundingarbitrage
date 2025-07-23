@@ -3,7 +3,7 @@ import subprocess
 import sys
 import os
 
-# Mapping script choices to filenames
+# Script options
 script_map = {
     "Pacifica vs Extended": "pac.py",
     "Pacifica vs Lighter": "pac1.py",
@@ -13,18 +13,28 @@ script_map = {
 st.title("📊 Funding Rate Arbitrage Comparison Tool")
 st.write("Choose exchange pair for comparison:")
 
-option = st.selectbox(
-    "Select comparison pair",
-    list(script_map.keys())
-)
+option = st.selectbox("Select comparison pair", list(script_map.keys()))
+
+# Sort option only for test3.py
+sort_choice = None
+if option == "Lighter vs Extended":
+    sort_choice = st.radio("Sort by:", ["ROI ascending", "Difference descending"])
+    sort_value = "2" if sort_choice == "ROI ascending" else "1"
+else:
+    sort_value = None
 
 if st.button("Run Comparison"):
     script_file = script_map[option]
     st.write(f"🔍 Running: `{script_file}`")
     
     try:
-        # Run the selected script and capture the output
-        result = subprocess.run([sys.executable, script_file], capture_output=True, text=True)
+        env = os.environ.copy()
+        if sort_value:
+            env["SORT_MODE"] = sort_value
+
+        command = [sys.executable, "injector.py", script_file] if script_file == "test3.py" else [sys.executable, script_file]
+        
+        result = subprocess.run(command, capture_output=True, text=True, env=env)
         
         if result.returncode != 0:
             st.error(f"❌ Error running {script_file}")
